@@ -2,28 +2,33 @@
 
 namespace Repositories{
     use Models\Driver;
+    use db\RowMapper;
+    use db\DbTemplate;
+
 
     interface IDriverRepository{
         function fetchAll();
         function getById(int $id);
         function save(Driver $driver);
     }
-    class DriverRepository implements IDriverRepository{
-        public function fetchAll(){
-            $conn=new \Mysqli('localhost','root','','delivery_project');
-            $sql="select * from tbl_drivers";
-            $stmt=$conn->prepare($sql);
-            $stmt->execute();
-            $result=$stmt->get_result();
-            $drivers=[];
-            while($row=$result->fetch_array(MYSQLI_ASSOC)){
-                $driver=new Driver();
+
+    class DriverRowMapper implements RowMapper{
+        public function mapRow($row){
+            $driver=new Driver();
                 $driver->setId($row['id'])->setName($row['name'])
                 ->setContactNo($row['contact_no'])->setStatus($row['status']);
-                $drivers[]=$driver;
-            }
-            $conn->close();
-            return $drivers;
+            return $driver;
+        }
+    }
+    class DriverRepository implements IDriverRepository{
+        private $dbTemplate=null;
+
+        public function __construct(){
+            $this->dbTemplate=DbTemplate::getInstance();
+        }
+        public function fetchAll(){
+            $sql="select * from tbl_drivers";
+            return $this->dbTemplate->query($sql,new DriverRowMapper());
         }
 
         public function getById(int $id){
@@ -46,16 +51,14 @@ namespace Repositories{
         }
 
         public function save(Driver $driver){
-            $conn=new \Mysqli('localhost','root','','delivery_project');
+            
             $sql="insert into tbl_drivers(name,contact_no,status) values(?,?,?)";
-            $stmt=$conn->prepare($sql);
             $name=$driver->getName();
-            $email = $driver->getContactNo();
-            $contact_no= $driver->getStatus();
-            $stmt->bind_param('ssi',$name,$email,$contact_no);
-            $result = $stmt->execute();
-            $conn->close();
-            return $result;
+            $contact_no = $driver->getContactNo();
+            $status= 1;
+            return $this->dbTemplate->execute($sql,'ssi',$name,$contact_no,$status);
+            
+               
         }
     }
 }

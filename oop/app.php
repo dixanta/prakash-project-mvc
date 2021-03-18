@@ -19,7 +19,7 @@ use Repositories\VehicleRepository;
 $repository=new DriverRepository();
 
 $driver=new Driver();
-$driver->setName('Krishna Murari')->setContactNo('75765765')->setStatus(false);
+$driver->setName('ramesh karki ji')->setContactNo('75765765')->setStatus(false);
 
 $repository->save($driver);
 
